@@ -111,7 +111,7 @@ task copyConf(type: Copy) {
 }
 //task 用来复制bin下的脚本。这里的fileMode并没有生效，原因不详
 task copyBin(type: Copy) {
-    from('src/main/resources/bin')
+    from('src/main/resources/distribution-bin')
     into('build/package/bin')
     //fileMode不生效，须在distributions中使用filesMatching配置
     fileMode 0744
