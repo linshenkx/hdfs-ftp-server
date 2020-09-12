@@ -1,6 +1,10 @@
 hdfs-ftp-server:一款基于hdfs的ftp服务器
 # 项目说明
 项目基于 https://github.com/iponweb/hdfs-over-ftp 和 https://github.com/garyfub/hdfsftpserver 进行改造升级。
+
+github:https://github.com/linshenkx/hdfs-ftp-server
+
+dockerhub:https://hub.docker.com/repository/docker/linshen/hdfs-ftp-server
 ## 特性
 1. 支持 hadoop 2.9.2 版本
 2. 支持 hdfs 高可用连接及 kerberos 认证
@@ -11,7 +15,7 @@ hdfs-ftp-server:一款基于hdfs的ftp服务器
 - docker-example:docker使用示例，启动命令参考各子文件夹下的run.sh
     - kerberos:使用kerberos的hadoop版本（正式使用）
     - non-kerberos:不使用kerberos的hadoop版本
-    - test:不使用hadoop的navite版本，以项目根目录为ftp根目录，用于测试开发
+    - test:不使用hadoop的native版本，以项目根目录为ftp根目录，用于测试开发
 ## 配置说明
 核心配置文件为：server.properties
 server.properties中的所有配置可以使用环境变量进行配置，且环境变量的优先级比配置文件高

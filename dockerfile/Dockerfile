@@ -9,7 +9,6 @@ ADD hdfs-ftp-server.tgz /opt
 
 COPY bootstrap.sh /tmp/
 
-# 配置Java环境及kerberos环境
 ENV APP_HOME=${APP_HOME} \
     PATH=${PATH}:${APP_HOME}/bin
 
