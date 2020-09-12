@@ -1,0 +1,162 @@
+buildscript {
+    repositories {
+        maven { url 'https://mirrors.huaweicloud.com/repository/maven/' }
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+    }
+}
+apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
+//打包tar包用到的插件
+//使用教程参考：https://docs.gradle.org/current/userguide/distribution_plugin.html
+apply plugin: 'distribution'
+
+allprojects {
+    repositories {
+        maven { url 'https://mirrors.huaweicloud.com/repository/maven/' }
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        mavenLocal()
+    }
+}
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+
+repositories {
+    maven { url 'https://mirrors.huaweicloud.com/repository/maven/' }
+    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.apache.hadoop:hadoop-client:2.9.2'
+    compile 'org.apache.hadoop:hadoop-common:2.9.2'
+    compile 'org.apache.hadoop:hadoop-hdfs:2.9.2'
+    implementation 'org.apache.ftpserver:ftpserver-core:1.1.1'
+    testCompile('org.junit.jupiter:junit-jupiter:5.6.1')
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+//由于打包问题会有hdfs-kerberos的认证错误,推荐使用shadowJar插件
+//https://arch-long.cn/articles/hadoop/Kerberos-Exceptions.html
+//https://stackoverflow.com/questions/35814340/gradle-jar-with-jersey-dependencies-produces-messagebodyreader-not-found-for-med
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'com.linshen.hdfsftpserver.HdfsFtpServer'
+    }
+    //baseName = project.name + '-all'
+    baseName = 'hdfs-ftp-server'
+    project.fileTree("$buildDir/fatjar/libs").forEach { jarFile ->
+        from zipTree(jarFile)
+    }
+    with jar
+    destinationDir = file("$buildDir/fatjar")
+}
+
+task copyToLib(type: Copy) {
+    into "$buildDir/fatjar/libs"
+    from configurations.runtime
+}
+
+// 构建可执行 jar 包，运行依赖jar内容会直接打到 jar 里面
+shadowJar {
+    //No FileSystem for scheme: hdfs  : https://www.jianshu.com/p/7eb8e46a7bac
+    //https://github.com/johnrengelman/shadow/issues/105
+    mergeServiceFiles()
+    manifest {
+        attributes(
+                'Main-Class': 'com.linshen.hdfsftpserver.HdfsFtpServer'
+        )
+    }
+
+    // 排除配置文件
+//    exclude('system.properties')
+//    exclude('log4j.properties')
+
+    // 打包时排除指定的 jar 包
+    dependencies {
+//        exclude(dependency('org.mongodb:mongo-java-driver:3.3.0'))
+    }
+
+    // 将 build.gradle 打入到 jar 中, 方便查看依赖包版本
+    from("./") {
+        include 'build.gradle'
+    }
+}
+
+
+// task 用来新建一些目录，目录位于build/package下
+task createDirs() {
+    file('build/package/bin').mkdirs()
+    file('build/package/conf').mkdirs()
+    file('build/package/lib').mkdirs()
+}
+//task 用来复制build出来的主jar包(这里不使用build而使用shadowJar)
+task copyLibs(type: Copy, dependsOn: 'shadowJar') {
+    from('build/libs')
+    into('build/package/lib')
+}
+//task 用来复制配置文件
+task copyConf(type: Copy) {
+    from('src/main/resources/conf')
+    into('build/package/conf')
+}
+//task 用来复制bin下的脚本。这里的fileMode并没有生效，原因不详
+task copyBin(type: Copy) {
+    from('src/main/resources/bin')
+    into('build/package/bin')
+    //fileMode不生效，须在distributions中使用filesMatching配置
+    fileMode 0744
+}
+
+// task 用来复制启动所依赖的jar包
+task copyDep(type: Copy) {
+    from configurations.runtime
+    into 'build/package/lib'
+}
+//把上述的task串联起来
+task prepareFile(dependsOn: [
+        'createDirs',
+        'copyLibs',
+        'copyConf',
+        'copyBin'
+//        由于使用独立jar包，这一步不需要
+//        'copyDep'
+]) {}
+
+//distributions插件配置
+//指定打包的tar包的名字，以及文件来源目录
+distributions {
+    main {
+        distributionBaseName = 'hdfs-ftp-server'
+        contents {
+            from { 'build/package' }
+            filesMatching('**/*.sh') { mode = 0744 }
+        }
+    }
+
+}
+distTar.dependsOn 'prepareFile'
+distTar.compression = Compression.GZIP
+
+//assembleDist 依赖于 distTar和distZip
+assembleDist.mustRunAfter('clean')
+task buildTarZip(dependsOn: [
+        'clean',
+        'assembleDist'
+]) {
+}
+
+
+task copyTarToDockerfile(type: Copy, dependsOn: ['buildTarZip']) {
+    from('build/distributions/hdfs-ftp-server.tgz')
+    into 'dockerfile/'
+}

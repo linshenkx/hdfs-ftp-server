@@ -1,0 +1,195 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+
+  <property>
+    <name>dfs.nameservices</name>
+    <value>hadoop-hadoop-hdfs-nn</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.inode.attributes.provider.class</name>
+    <value>org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer</value>
+  </property>
+
+  <property>
+    <name>dfs.ha.namenodes.hadoop-hadoop-hdfs-nn</name>
+    <value>master,slave</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.rpc-address.hadoop-hadoop-hdfs-nn.master</name>
+    <value>paas-201:9000</value>
+  </property>
+  <property>
+    <name>dfs.namenode.rpc-address.hadoop-hadoop-hdfs-nn.slave</name>
+    <value>paas-202:9000</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.http-address.hadoop-hadoop-hdfs-nn.master</name>
+    <value>paas-201:50470</value>
+  </property>
+  <property>
+    <name>dfs.namenode.http-address.hadoop-hadoop-hdfs-nn.slave</name>
+    <value>paas-202:50470</value>
+  </property>
+
+  <property>
+    <name>dfs.journalnode.rpc-address</name>
+    <value>0.0.0.0:8485</value>
+  </property>
+
+
+  <property>
+    <name>dfs.journalnode.edits.dir</name>
+    <value>/workspace/jn/data</value>
+  </property>
+
+  <property>
+    <name>dfs.client.failover.proxy.provider.hadoop-hadoop-hdfs-nn</name>
+    <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+  </property>
+
+  <property>
+    <name>dfs.ha.fencing.methods</name>
+    <value>shell(/usr/local/hadoop/fencing.sh)</value>
+  </property>
+
+  <property>
+    <name>dfs.ha.automatic-failover.enabled</name>
+    <value>true</value>
+  </property>
+
+  <property>
+      <name>dfs.webhdfs.enabled</name>
+      <value>true</value>
+  </property>
+
+  <property>
+    <name>dfs.datanode.use.datanode.hostname</name>
+    <value>false</value>
+  </property>
+
+  <property>
+    <name>dfs.client.use.datanode.hostname</name>
+    <value>false</value>
+  </property>
+
+  <property>
+    <name>dfs.replication</name>
+      <value>3</value>
+  </property>
+  <property>
+    <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+    <value>false</value>
+  </property>
+
+  <!-- Bind to all interfaces -->
+  <property>
+    <name>dfs.namenode.rpc-bind-host</name>
+    <value>0.0.0.0</value>
+  </property>
+  <property>
+    <name>dfs.namenode.servicerpc-bind-host</name>
+    <value>0.0.0.0</value>
+  </property>
+  <property>
+    <name>dfs.namenode.http-bind-host</name>
+    <value>0.0.0.0</value>
+  </property>
+  <!-- /Bind to all interfaces -->
+  <property>
+    <name>dfs.http.policy</name>
+    <value>HTTPS_ONLY</value>
+  </property>
+  <property>
+    <name>dfs.client.https.need-AUTH</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>dfs.namenode.https-address</name>
+    <value>0.0.0.0:50470</value>
+  </property>
+
+  <!-- General HDFS security config-->
+  <property>
+    <name>dfs.block.access.token.enable</name>
+    <value>true</value>
+  </property>
+
+  <!-- JournalNode security config -->
+  <property>
+    <name>dfs.journalnode.kerberos.principal</name>
+    <value>jn/_HOST@HADOOP.COM</value>
+  </property>
+  <property>
+    <name>dfs.journalnode.keytab.file</name>
+    <value>/etc/security/keytab/jn.service.keytab</value>
+  </property>
+  <property>
+    <name>dfs.journalnode.kerberos.internal.spnego.principal</name>
+    <value>HTTP/_HOST@HADOOP.COM</value>
+  </property>
+  <property>
+    <name>dfs.journalnode.https-address</name>
+    <value>0.0.0.0:8481</value>
+  </property>
+
+  <!-- DataNode security config -->
+  <property>
+    <name>dfs.datanode.data.dir.perm</name>
+    <value>700</value>
+  </property>
+  <property>
+    <name>dfs.datanode.address</name>
+    <value>0.0.0.0:50010</value>
+  </property>
+  <property>
+    <name>dfs.datanode.http.address</name>
+    <value>0.0.0.0:50475</value>
+  </property>
+  <property>
+    <name>dfs.datanode.https.address</name>
+    <value>0.0.0.0:50475</value>
+  </property>
+  <property>
+    <name>dfs.namenode.kerberos.principal</name>
+    <value>nn/_HOST@HADOOP.COM</value>
+  </property>
+  <property>
+    <name>dfs.datanode.kerberos.principal</name>
+    <value>dn/_HOST@HADOOP.COM</value>
+  </property>
+  <property>
+    <name>dfs.namenode.keytab.file</name>
+    <value>/etc/security/keytab/nn.service.keytab</value>
+  </property>
+  <property>
+    <name>dfs.namenode.kerberos.internal.spnego.principal</name>
+    <value>HTTP/_HOST@HADOOP.COM</value>
+  </property>
+  <property>
+    <name>dfs.datanode.keytab.file</name>
+    <value>/etc/security/keytab/dn.service.keytab</value>
+  </property>
+  <property>
+    <name>dfs.data.transfer.protection</name>
+    <value>integrity</value>
+  </property>
+
+  <!--configure secure WebHDFS -->
+
+  <property>
+       <name>dfs.web.authentication.kerberos.principal</name>
+       <value>HTTP/_HOST@HADOOP.COM</value>
+  </property>
+  <property>
+       <name>dfs.web.authentication.kerberos.keytab</name>
+       <value>/etc/security/keytab/HTTP.service.keytab</value>
+  </property>
+
+
+
+
+</configuration>
