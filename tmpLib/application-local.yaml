@@ -1,0 +1,20 @@
+my:
+  hadoop:
+    confDir: ${HADOOP_CONF_DIR:/opt/hadoop/etc/hadoop}
+    krb5Conf: ${KRB5_CONFIG:/etc/krb5.conf}
+    userPrincipal: ${USER_PRINCIPAL:admin02/adp@HADOOP.COM}
+    userKeytab: ${USER_KEYTAB:/home/admin02.service.keytab}
+ftp:
+  class: cn.linshenkx.bigdata.hdfsftpserver.impl.local.LocalHdfsFileSystemFactory
+#  class: cn.linshenkx.bigdata.hdfsftpserver.impl.official331.Official331HdfsFileSystemFactory
+  server:
+    port: ${FTP_SERVER_PORT:22222}
+    userPropFile: ${FTP_USERS_PROP_FILE:/tmp/users.properties}
+    passive:
+      ports: ${FTP_SERVER_PASSIVE_PORTS:20300-20600}
+    ssl:
+      enable: ${FTP_SERVER_SSL_ENABLE:false}
+      protocol: ${FTP_SERVER_SSL_PROTOCOL:ssl}
+      keystore:
+        file: ${FTP_SERVER_SSL_KEYSTORE_FILE:/tmp/resources/ftpserver.jks}
+        password: ${FTP_SERVER_SSL_KEYSTORE_PASSWORD:changeme}

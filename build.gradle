@@ -1,135 +1,164 @@
-buildscript {
-    repositories {
-        maven { url 'https://mirrors.huaweicloud.com/repository/maven/' }
-        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
-    }
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
-    }
+plugins {
+    id 'com.github.johnrengelman.shadow' version '7.1.1'
+    id "io.spring.dependency-management" version "1.0.11.RELEASE"
+    id 'java'
+    id 'distribution'
 }
-apply plugin: 'java'
-apply plugin: 'com.github.johnrengelman.shadow'
-//打包tar包用到的插件
-//使用教程参考：https://docs.gradle.org/current/userguide/distribution_plugin.html
-apply plugin: 'distribution'
 
+// 所有模块/项目的通用配置
 allprojects {
+    group 'cn.linshenkx.bigdata'
+    version '2.0'
+
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'io.spring.dependency-management'
+
     repositories {
         maven { url 'https://mirrors.huaweicloud.com/repository/maven/' }
-        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
+        mavenCentral()
         mavenLocal()
     }
-}
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
-}
 
+    // 指定JDK版本
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    // 指定编码格式
+    [compileJava,compileTestJava,javadoc]*.options*.encoding = 'UTF-8'
 
-repositories {
-    maven { url 'https://mirrors.huaweicloud.com/repository/maven/' }
-    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
-    mavenLocal()
-    mavenCentral()
-}
-
-dependencies {
-    compile 'org.apache.hadoop:hadoop-client:2.9.2'
-    compile 'org.apache.hadoop:hadoop-common:2.9.2'
-    compile 'org.apache.hadoop:hadoop-hdfs:2.9.2'
-    implementation 'org.apache.ftpserver:ftpserver-core:1.1.1'
-    testCompile('org.junit.jupiter:junit-jupiter:5.6.1')
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
-}
-
-test {
-    useJUnitPlatform()
-}
-
-//由于打包问题会有hdfs-kerberos的认证错误,推荐使用shadowJar插件
-//https://arch-long.cn/articles/hadoop/Kerberos-Exceptions.html
-//https://stackoverflow.com/questions/35814340/gradle-jar-with-jersey-dependencies-produces-messagebodyreader-not-found-for-med
-task fatJar(type: Jar) {
-    manifest {
-        attributes 'Main-Class': 'com.linshen.hdfsftpserver.HdfsFtpServer'
-    }
-    //baseName = project.name + '-all'
-    baseName = 'hdfs-ftp-server'
-    project.fileTree("$buildDir/fatjar/libs").forEach { jarFile ->
-        from zipTree(jarFile)
-    }
-    with jar
-    destinationDir = file("$buildDir/fatjar")
-}
-
-task copyToLib(type: Copy) {
-    into "$buildDir/fatjar/libs"
-    from configurations.runtime
-}
-
-// 构建可执行 jar 包，运行依赖jar内容会直接打到 jar 里面
-shadowJar {
-    //No FileSystem for scheme: hdfs  : https://www.jianshu.com/p/7eb8e46a7bac
-    //https://github.com/johnrengelman/shadow/issues/105
-    mergeServiceFiles()
-    manifest {
-        attributes(
-                'Main-Class': 'com.linshen.hdfsftpserver.HdfsFtpServer'
-        )
+    ext {//依赖版本
+        springBootVersion = "2.6.1"
+        ftpserverVersion = "1.1.1"
+        guavaVersion = "31.0.1-jre"
+        commonsLang3Version = "3.12.0"
+        hutoolVersion = "5.7.16"
+        slf4jVersion = "1.7.32"
+        lombokVersion = "1.18.22"
     }
 
-    // 排除配置文件
-//    exclude('system.properties')
-//    exclude('log4j.properties')
+    // 管理版本
+    dependencyManagement {
+        dependencies {
+            dependency "org.springframework.boot:spring-boot-starter:${springBootVersion}"
+            dependency "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}"
+            dependency "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+            dependency "org.apache.ftpserver:ftpserver-core:${ftpserverVersion}"
+            dependency "com.google.guava:guava:${guavaVersion}"
+            dependency "org.apache.commons:commons-lang3:${commonsLang3Version}"
+            dependency "cn.hutool:hutool-all:${hutoolVersion}"
+            dependency "org.slf4j:slf4j-api:${slf4jVersion}"
 
-    // 打包时排除指定的 jar 包
-    dependencies {
-//        exclude(dependency('org.mongodb:mongo-java-driver:3.3.0'))
+            dependency "org.projectlombok:lombok:${lombokVersion}"
+        }
     }
 
-    // 将 build.gradle 打入到 jar 中, 方便查看依赖包版本
-    from("./") {
-        include 'build.gradle'
+}
+// 子模块/项目的统一配置
+subprojects {
+    dependencies{
+        implementation 'org.apache.ftpserver:ftpserver-core'
     }
 }
 
+def implModules() {
+    subprojects.findAll {it.name.contains('hdfs-ftp-server-impl')}
+}
+configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        if (details.requested.group == 'org.apache.logging.log4j') {
+            details.useVersion '2.17.0'
+        }
+    }
+}
+configure(implModules()) {
+    apply plugin: 'com.github.johnrengelman.shadow'
+    shadowJar {
+        //No FileSystem for scheme: hdfs  : https://www.jianshu.com/p/7eb8e46a7bac
+        //https://github.com/johnrengelman/shadow/issues/105
+        // https://www.jianshu.com/p/7eb8e46a7bac
+        mergeServiceFiles()
 
-// task 用来新建一些目录，目录位于build/package下
+        archiveClassifier.set('shadow')
+//        archiveBaseName.set('shadow')
+//        archiveClassifier.set('')
+        archiveVersion.set('')
+        // 这些依赖都在hdfs-ftp-server-facade工程，在bootJar中已经提供，不需要重复打入。
+        dependencies {
+            exclude(project(':hdfs-ftp-server-facade'))
+            exclude(dependency('org.apache.ftpserver:ftpserver-core:.*'))
+            exclude(dependency('com.google.guava:guava:.*'))
+            exclude(dependency('org.apache.commons:commons-lang3:.*'))
+            exclude(dependency('cn.hutool:hutool-all:.*'))
+            exclude(dependency('org.slf4j:slf4j-api:.*'))
+        }
+        from("./") {
+            include 'build.gradle'
+        }
+    }
+
+    task copyJars(type: Copy) {
+        dependsOn shadowJar
+        include '**/*shadow*.jar'
+        from('build/libs')
+        into('../build/package/lib')
+    }
+}
+
+def bootModule() {
+    subprojects.findAll {it.name.contains('hdfs-ftp-server-boot')}
+}
+
+configure(bootModule()) {
+    task copyJars(type: Copy) {
+        dependsOn build
+        exclude '**/*plain.jar'
+        from('build/libs')
+        into('../build/package/lib')
+    }
+}
+
+task cleanAll(){
+    dependsOn subprojects.clean
+    dependsOn clean
+}
+
 task createDirs() {
+    file('build').deleteOnExit()
+    file('build').mkdirs()
+    file('build/package').mkdirs()
     file('build/package/bin').mkdirs()
     file('build/package/conf').mkdirs()
     file('build/package/lib').mkdirs()
 }
-//task 用来复制build出来的主jar包(这里不使用build而使用shadowJar)
-task copyLibs(type: Copy, dependsOn: 'shadowJar') {
-    from('build/libs')
-    into('build/package/lib')
+
+task prepareJars() {
+    dependsOn bootModule().build
+    dependsOn implModules().shadowJar
 }
-//task 用来复制配置文件
-task copyConf(type: Copy) {
-    from('src/main/resources/conf')
-    into('build/package/conf')
+task copyLibs() {
+    dependsOn bootModule().copyJars
+    dependsOn implModules().copyJars
 }
-//task 用来复制bin下的脚本。这里的fileMode并没有生效，原因不详
 task copyBin(type: Copy) {
-    from('src/main/resources/distribution-bin')
-    into('build/package/bin')
-    //fileMode不生效，须在distributions中使用filesMatching配置
-    fileMode 0744
+    from 'distribution/bin'
+    into 'build/package/bin'
+}
+task copyConf(type: Copy) {
+    from 'hdfs-ftp-server-boot/src/main/resources'
+    from 'distribution/conf'
+    into 'build/package/conf'
+}
+task copyMd(type: Copy) {
+    from 'README.md'
+    into 'build/package/'
 }
 
-// task 用来复制启动所依赖的jar包
-task copyDep(type: Copy) {
-    from configurations.runtime
-    into 'build/package/lib'
-}
-//把上述的task串联起来
-task prepareFile(dependsOn: [
-        'createDirs',
+task copyAll(dependsOn: [
+        'copyMd',
         'copyLibs',
         'copyConf',
         'copyBin'
-//        由于使用独立jar包，这一步不需要
-//        'copyDep'
 ]) {}
 
 //distributions插件配置
@@ -144,13 +173,12 @@ distributions {
     }
 
 }
-distTar.dependsOn 'prepareFile'
+distTar.dependsOn 'copyAll'
 distTar.compression = Compression.GZIP
 
 //assembleDist 依赖于 distTar和distZip
 assembleDist.mustRunAfter('clean')
 task buildTarZip(dependsOn: [
-        'clean',
         'assembleDist'
 ]) {
 }

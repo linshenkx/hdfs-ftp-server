@@ -1,0 +1,14 @@
+ext {//依赖版本
+    hadoopVersion = "3.0.0-cdh6.3.2"
+}
+repositories {
+    maven{ url 'https://repository.cloudera.com/content/repositories/releases/'}
+    maven{ url 'https://repository.cloudera.com/artifactory/cloudera-repos/'}
+    mavenLocal()
+}
+dependencies {
+    implementation project(":hdfs-ftp-server-facade")
+    implementation ("org.apache.hadoop:hadoop-client-api:${hadoopVersion}")
+    implementation ("org.apache.hadoop:hadoop-client-runtime:${hadoopVersion}")
+
+}

@@ -1,0 +1,21 @@
+plugins {
+    id 'org.springframework.boot' version '2.6.1'
+}
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    implementation 'org.apache.ftpserver:ftpserver-core'
+    implementation 'com.google.guava:guava'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'cn.hutool:hutool-all'
+    implementation 'org.slf4j:slf4j-api'
+    implementation project(":hdfs-ftp-server-facade")
+    annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+}
+
+

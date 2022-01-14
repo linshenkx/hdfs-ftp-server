@@ -1,2 +1,6 @@
 rootProject.name = 'hdfs-ftp-server'
-
+include 'hdfs-ftp-server-boot'
+include 'hdfs-ftp-server-facade'
+include 'hdfs-ftp-server-impl-native'
+include 'hdfs-ftp-server-impl-official-331'
+include 'hdfs-ftp-server-impl-cdh632-300'

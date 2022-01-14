@@ -6,10 +6,13 @@ github:https://github.com/linshenkx/hdfs-ftp-server
 
 dockerhub:https://hub.docker.com/repository/docker/linshen/hdfs-ftp-server
 ## 特性
-1. 支持 hadoop 2.9.2 版本
+1. 使用java的spi机制内置支持多hadoop版本，无需编译可直接切换使用。目前预编译版本有：
+   - cdh6.3.2(hadoop3.0.0)
+   - hadoop3.3.1
+   - 
 2. 支持 hdfs 高可用连接及 kerberos 认证
 3. 支持环境变量方式使用外部配置文件
-4. 提供多种使用方法案例：jar包shell脚本启动、docker启动等。
+4. 提供多种使用案例：jar包shell脚本启动、docker启动等。
 ## 项目结构
 - dockerfile：用于构造docker镜像，命令示例参考：dockerfile/docker-build-tag.sh
 - docker-example:docker使用示例，启动命令参考各子文件夹下的run.sh
@@ -27,21 +30,18 @@ server.properties中的所有配置可以使用环境变量进行配置，且环
 2. 如果使用kerberos认证，需提供用户Principal和keytab文件
 
 ## 使用说明
-1. execute-jar(不推荐)
-    - 获取可执行jar包：gradle shadowJar
-    - 生成位置：build/libs/hdfs-ftp-server.jar
-    - 执行： java -jar hdfs-ftp-server.jar
-2. shell(推荐)
-    - 打包：gradle buildTarZip（出错请使用最新版本的gradle）
-    - 生成位置：build/distributions/hdfs-ftp-server.tgz (zip)
-    - 解压后获取hdfs-ftp-server文件夹
+用ftp客户端软件连接时，可能需要把连接超时时间调大。
+1. shell(推荐)
     - 执行：bin/hdfs-ftp-server.sh {start|stop}
-3. docker(推荐)
+2. docker(推荐)
     - 参考 docker-example
 
 ## 注意事项
 目前以hdfs-kerberos方式登录时，权限由登录user（keytab+principal）权限决定，无法限制只读
 
 
-
-
+## 开发
+1. 编译打包
+    - 打包：`gradle cleanAll createDirs prepareJars buildTarZip`（出错请使用最新版本的gradle）
+    - 生成位置：build/distributions/hdfs-ftp-server-${VERSION}.tgz (zip)
+    - 解压后获取hdfs-ftp-server文件夹
