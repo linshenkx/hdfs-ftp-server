@@ -13,6 +13,8 @@ COPY bootstrap.sh /tmp/
 ENV APP_HOME=${APP_HOME} \
     PATH=${PATH}:${APP_HOME}/bin
 
+RUN mv /opt/hdfs-ftp-server-* ${APP_HOME}
+
 WORKDIR ${APP_HOME}
 
 ENTRYPOINT ["bash", "/tmp/bootstrap.sh"]

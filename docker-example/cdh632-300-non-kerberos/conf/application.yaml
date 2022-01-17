@@ -1,0 +1,23 @@
+my:
+  hadoop:
+    confDir: ${HADOOP_CONF_DIR}
+    krb5Conf: ${KRB5_CONFIG}
+    userPrincipal: ${USER_PRINCIPAL}
+    userKeytab: ${USER_KEYTAB}
+ftp:
+  server:
+    port: ${FTP_SERVER_PORT:21122}
+    userPropFile: ${FTP_USERS_PROP_FILE} #绝对路径，默认不需要填，为app目录下conf/users.properties
+    passive:
+      ports: ${FTP_SERVER_PASSIVE_PORTS:1000-10500}
+    ssl:
+      enable: ${FTP_SERVER_SSL_ENABLE:false}
+      protocol: ${FTP_SERVER_SSL_PROTOCOL:ssl}
+      keystore:
+        file: ${FTP_SERVER_SSL_KEYSTORE_FILE:/tmp/resources/ftpserver.jks}
+        password: ${FTP_SERVER_SSL_KEYSTORE_PASSWORD:changeme}
+logging:
+  logback:
+    rollingpolicy:
+      max-history: 7
+      max-file-size: 20MB
